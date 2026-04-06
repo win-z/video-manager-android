@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="sand_bg">#F6EFE4</color>
+    <color name="card_surface">#FFFDF8</color>
+    <color name="card_stroke">#1F18312B</color>
+    <color name="deep_green">#18312B</color>
+    <color name="text_muted">#6B756F</color>
+    <color name="accent">#FF7A18</color>
+    <color name="accent_dark">#B84F00</color>
+    <color name="white">#FFFFFF</color>
+</resources>

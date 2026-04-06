@@ -1,0 +1,110 @@
+<svg width="1080" height="2340" viewBox="0 0 1080 2340" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="60" x2="950" y2="2200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBF3E8"/>
+      <stop offset="1" stop-color="#F1E7D8"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="126" y1="120" x2="954" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#FFF2DD"/>
+    </linearGradient>
+    <linearGradient id="thumbA" x1="60" y1="0" x2="420" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF9A4B"/>
+      <stop offset="1" stop-color="#18312B"/>
+    </linearGradient>
+    <linearGradient id="thumbB" x1="80" y1="20" x2="420" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFA766"/>
+      <stop offset="1" stop-color="#284740"/>
+    </linearGradient>
+    <filter id="shadow" x="72" y="76" width="936" height="650" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#6D665B" flood-opacity="0.16"/>
+    </filter>
+    <filter id="cardShadow" x="64" y="752" width="952" height="1456" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#4E4A43" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="2340" rx="0" fill="url(#bg)"/>
+
+  <g opacity="0.75">
+    <circle cx="186" cy="190" r="120" fill="#FFD9B7"/>
+    <circle cx="946" cy="346" r="84" fill="#E9DED0"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="108" y="112" width="864" height="566" rx="44" fill="url(#hero)"/>
+    <text x="160" y="188" fill="#FF7A18" font-family="Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="4">VIDEO CURATOR</text>
+    <text x="160" y="280" fill="#18312B" font-family="Arial, sans-serif" font-size="72" font-weight="700">把视频整理成</text>
+    <text x="160" y="360" fill="#18312B" font-family="Arial, sans-serif" font-size="72" font-weight="700">一个精选库</text>
+    <text x="160" y="432" fill="#66746C" font-family="Arial, sans-serif" font-size="32">安卓本地管理，支持文件夹导入、十星评分、排序和拖拽编排。</text>
+
+    <rect x="160" y="490" width="416" height="94" rx="47" fill="#FF7A18"/>
+    <text x="244" y="548" fill="#FFF9F1" font-family="Arial, sans-serif" font-size="34" font-weight="700">导入视频文件夹</text>
+
+    <rect x="596" y="490" width="216" height="94" rx="47" fill="#203630"/>
+    <text x="664" y="548" fill="#FFF9F1" font-family="Arial, sans-serif" font-size="34" font-weight="700">清空</text>
+  </g>
+
+  <g filter="url(#cardShadow)">
+    <rect x="108" y="790" width="864" height="220" rx="36" fill="#FFFDF8"/>
+    <rect x="152" y="844" width="428" height="84" rx="24" fill="#FFF9F0" stroke="#E5D8C9"/>
+    <text x="184" y="897" fill="#18312B" font-family="Arial, sans-serif" font-size="32">手动排序</text>
+    <rect x="602" y="844" width="156" height="72" rx="24" fill="#FFF7EA" stroke="#E5D8C9"/>
+    <text x="636" y="890" fill="#18312B" font-family="Arial, sans-serif" font-size="28" font-weight="700">12 个视频</text>
+    <rect x="778" y="844" width="150" height="72" rx="24" fill="#FFF7EA" stroke="#E5D8C9"/>
+    <text x="812" y="890" fill="#18312B" font-family="Arial, sans-serif" font-size="28" font-weight="700">均分 8.6</text>
+    <rect x="152" y="948" width="776" height="18" rx="9" fill="#F2EBDD"/>
+    <rect x="152" y="948" width="428" height="18" rx="9" fill="#FFB87F"/>
+  </g>
+
+  <g filter="url(#cardShadow)">
+    <rect x="108" y="1058" width="416" height="542" rx="38" fill="#FFFDF8"/>
+    <rect x="108" y="1058" width="416" height="272" rx="38" fill="url(#thumbA)"/>
+    <rect x="398" y="1270" width="94" height="40" rx="20" fill="#7C000000"/>
+    <text x="417" y="1298" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">07:42</text>
+    <text x="146" y="1384" fill="#18312B" font-family="Arial, sans-serif" font-size="36" font-weight="700">旅行 Vlog - 杭州秋天</text>
+    <text x="146" y="1436" fill="#6B756F" font-family="Arial, sans-serif" font-size="24">Travel/2026/autumn-hz.mp4</text>
+    <text x="146" y="1472" fill="#6B756F" font-family="Arial, sans-serif" font-size="24">1.2 GB · 修改于 2026/04/06</text>
+    <g transform="translate(142 1508)">
+      <circle cx="24" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="78" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="132" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="186" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="240" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="294" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="348" cy="24" r="24" fill="#E8E1D7"/>
+    </g>
+    <text x="146" y="1580" fill="#6B756F" font-family="Arial, sans-serif" font-size="22">手动排序下可长按拖拽</text>
+  </g>
+
+  <g filter="url(#cardShadow)">
+    <rect x="556" y="1058" width="416" height="542" rx="38" fill="#FFFDF8"/>
+    <rect x="556" y="1058" width="416" height="272" rx="38" fill="url(#thumbB)"/>
+    <rect x="846" y="1270" width="94" height="40" rx="20" fill="#7C000000"/>
+    <text x="866" y="1298" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">03:28</text>
+    <text x="594" y="1384" fill="#18312B" font-family="Arial, sans-serif" font-size="36" font-weight="700">产品讲解 - 新功能演示</text>
+    <text x="594" y="1436" fill="#6B756F" font-family="Arial, sans-serif" font-size="24">Work/demo/product-feature.mp4</text>
+    <text x="594" y="1472" fill="#6B756F" font-family="Arial, sans-serif" font-size="24">684 MB · 修改于 2026/04/05</text>
+    <g transform="translate(590 1508)">
+      <circle cx="24" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="78" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="132" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="186" cy="24" r="24" fill="#FF7A18"/>
+      <circle cx="240" cy="24" r="24" fill="#E8E1D7"/>
+      <circle cx="294" cy="24" r="24" fill="#E8E1D7"/>
+      <circle cx="348" cy="24" r="24" fill="#E8E1D7"/>
+    </g>
+    <text x="594" y="1580" fill="#6B756F" font-family="Arial, sans-serif" font-size="22">统一卡片化展示与缩略图预览</text>
+  </g>
+
+  <g filter="url(#cardShadow)">
+    <rect x="108" y="1632" width="864" height="458" rx="38" fill="#FFFDF8"/>
+    <text x="150" y="1708" fill="#18312B" font-family="Arial, sans-serif" font-size="40" font-weight="700">交互逻辑预览</text>
+    <text x="150" y="1772" fill="#6B756F" font-family="Arial, sans-serif" font-size="30">1. 点击“导入视频文件夹”后，App 会递归扫描该目录下所有常见视频格式。</text>
+    <text x="150" y="1838" fill="#6B756F" font-family="Arial, sans-serif" font-size="30">2. 每个视频自动读取时长、修改时间，并生成统一缩略图预览。</text>
+    <text x="150" y="1904" fill="#6B756F" font-family="Arial, sans-serif" font-size="30">3. 评分是十星制，支持按评分、名称、时长、修改时间和手动顺序排序。</text>
+    <text x="150" y="1970" fill="#6B756F" font-family="Arial, sans-serif" font-size="30">4. 处于“手动排序”时，长按卡片即可拖拽重排，结果会保存到本机。</text>
+    <rect x="150" y="2016" width="258" height="16" rx="8" fill="#FFB87F"/>
+    <rect x="150" y="2050" width="640" height="16" rx="8" fill="#F0E6D7"/>
+  </g>
+</svg>

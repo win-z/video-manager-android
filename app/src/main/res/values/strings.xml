@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">视频管理台</string>
+    <string name="header_tag">Video Curator</string>
+    <string name="header_title">把手机里的视频整理成精选库</string>
+    <string name="header_subtitle">支持文件夹导入、十星评分、多种排序、拖拽编排和统一风格预览。</string>
+    <string name="import_folder">导入视频文件夹</string>
+    <string name="clear_all">清空</string>
+    <string name="search_hint">按文件名或路径搜索</string>
+    <string name="empty_message">先点击上方按钮选择一个视频文件夹，系统会自动扫描常见视频格式并生成预览图。</string>
+    <string name="preview_image">视频预览图</string>
+    <string name="remove_video">移除视频</string>
+    <string name="drag_tip">手动排序下可长按拖拽</string>
+</resources>
