@@ -26,6 +26,7 @@ class VideoAdapter(
     interface Callbacks {
         fun onRate(videoId: String, rating: Int)
         fun onRemove(videoId: String)
+        fun onPlay(video: VideoItem)
         fun canDrag(): Boolean
     }
 
@@ -89,6 +90,7 @@ class VideoAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(video: VideoItem) {
+            binding.root.setOnClickListener { callbacks.onPlay(video) }
             binding.titleText.text = video.name
             val scoreLine = if (video.scoreValue > 0) " · 评分 ${VideoItem.formatScore(video.scoreValue)}" else ""
             binding.metaText.text = "${video.relativePath}\n${Formatter.formatFileSize(video.sizeBytes)}$scoreLine · 修改于 ${dateFormat.format(video.lastModified)}"
@@ -106,6 +108,7 @@ class VideoAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(video: VideoItem) {
+            binding.root.setOnClickListener { callbacks.onPlay(video) }
             binding.titleText.text = video.name
             val scoreLine = if (video.scoreValue > 0) " · ${VideoItem.formatScore(video.scoreValue)}分" else ""
             binding.metaText.text = "${Formatter.formatFileSize(video.sizeBytes)}$scoreLine · ${dateFormat.format(video.lastModified)}"

@@ -7,8 +7,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,7 +31,7 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
     private val allVideos = mutableListOf<VideoItem>()
     private var sortMode = SortMode.MANUAL
     private var viewMode = VideoAdapter.ViewMode.GRID
-    private var currentQuery = ""
+    private var gridSpanCount = 2   // 默认 M 档
     private var currentTreeUri: Uri? = null
 
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -53,17 +51,17 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         importer = VideoFolderImporter(this)
         sortMode = storage.loadSortMode()
         viewMode = storage.loadViewMode()
+        gridSpanCount = storage.loadGridSize()
         currentTreeUri = storage.loadTreeUri()
         allVideos += storage.loadVideos()
 
         requestMediaPermissionIfNeeded()
         setupList()
         setupHeader()
-        setupFilters()
         render()
     }
 
-    /** 申请 READ_MEDIA_VIDEO（Android 13+）或 READ_EXTERNAL_STORAGE，让 MediaStore 查询更顺畅 */
+    /** 申请 READ_MEDIA_VIDEO（Android 13+）或 READ_EXTERNAL_STORAGE */
     private fun requestMediaPermissionIfNeeded() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_VIDEO
@@ -78,7 +76,8 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
     private fun setupList() {
         adapter = VideoAdapter(contentResolver, this)
         adapter.viewMode = viewMode
-        val layoutManager = GridLayoutManager(this, if (viewMode == VideoAdapter.ViewMode.GRID) 2 else 1)
+        val spanCount = if (viewMode == VideoAdapter.ViewMode.GRID) gridSpanCount else 1
+        val layoutManager = GridLayoutManager(this, spanCount)
         binding.videoRecycler.layoutManager = layoutManager
         binding.videoRecycler.adapter = adapter
 
@@ -115,7 +114,10 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
     }
 
     private fun setupHeader() {
+        // ── 导入 ──
         binding.importButton.setOnClickListener { folderPicker.launch(null) }
+
+        // ── 清空 ──
         binding.clearButton.setOnClickListener {
             if (allVideos.isEmpty()) return@setOnClickListener
             AlertDialog.Builder(this)
@@ -129,44 +131,51 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
                 .setNegativeButton("取消", null)
                 .show()
         }
-    }
 
-    private fun setupFilters() {
-        val labels = SortMode.entries.map { it.label }
-        binding.sortDropdown.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, labels))
-        binding.sortDropdown.setText(sortMode.label, false)
-        binding.sortDropdown.setOnItemClickListener { _, _, position, _ ->
-            sortMode = SortMode.entries[position]
-            storage.saveSortMode(sortMode)
-            render()
-        }
-
+        // ── 网格 / 列表切换 ──
         updateViewToggleState()
         binding.gridViewButton.setOnClickListener { setViewMode(VideoAdapter.ViewMode.GRID) }
         binding.listViewButton.setOnClickListener { setViewMode(VideoAdapter.ViewMode.LIST) }
 
-        binding.searchInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-            override fun afterTextChanged(s: Editable?) {
-                currentQuery = s?.toString().orEmpty()
-                render()
-            }
-        })
+        // ── 网格图标大小 S / M / L ──
+        updateGridSizeState()
+        binding.sizeSmallButton.setOnClickListener  { setGridSize(3) }   // S = 3 列（小图）
+        binding.sizeMediumButton.setOnClickListener { setGridSize(2) }   // M = 2 列（中图）
+        binding.sizeLargeButton.setOnClickListener  { setGridSize(1) }   // L = 1 列（大图）
     }
 
     private fun setViewMode(mode: VideoAdapter.ViewMode) {
         viewMode = mode
         adapter.viewMode = mode
+        val spanCount = if (mode == VideoAdapter.ViewMode.GRID) gridSpanCount else 1
         val lm = binding.videoRecycler.layoutManager as? GridLayoutManager
-        lm?.spanCount = if (mode == VideoAdapter.ViewMode.GRID) 2 else 1
+        lm?.spanCount = spanCount
         storage.saveViewMode(mode)
         updateViewToggleState()
+        updateGridSizeState()
+    }
+
+    private fun setGridSize(spanCount: Int) {
+        gridSpanCount = spanCount
+        storage.saveGridSize(spanCount)
+        if (viewMode == VideoAdapter.ViewMode.GRID) {
+            val lm = binding.videoRecycler.layoutManager as? GridLayoutManager
+            lm?.spanCount = spanCount
+            adapter.notifyDataSetChanged()
+        }
+        updateGridSizeState()
     }
 
     private fun updateViewToggleState() {
         binding.gridViewButton.alpha = if (viewMode == VideoAdapter.ViewMode.GRID) 1.0f else 0.35f
         binding.listViewButton.alpha = if (viewMode == VideoAdapter.ViewMode.LIST) 1.0f else 0.35f
+    }
+
+    private fun updateGridSizeState() {
+        val inGrid = viewMode == VideoAdapter.ViewMode.GRID
+        binding.sizeSmallButton.alpha  = if (inGrid && gridSpanCount == 3) 1.0f else if (inGrid) 0.4f else 0.2f
+        binding.sizeMediumButton.alpha = if (inGrid && gridSpanCount == 2) 1.0f else if (inGrid) 0.4f else 0.2f
+        binding.sizeLargeButton.alpha  = if (inGrid && gridSpanCount == 1) 1.0f else if (inGrid) 0.4f else 0.2f
     }
 
     private fun importFolder(uri: Uri) {
@@ -191,7 +200,7 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
             allVideos.clear()
             allVideos += scanned
             persistVideos()
-            render()  // ← 扫描完立刻显示，不等待重命名
+            render()
             Toast.makeText(
                 this@MainActivity,
                 "已找到 ${allVideos.size} 个视频，后台处理中…",
@@ -220,12 +229,27 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         }
     }
 
+    /**
+     * 用户手动修改星级后：
+     * 1. 更新 rating
+     * 2. 立即重算所有视频的 scoreValue（按 manualOrder 排序，维持桶内序号）
+     * 3. 触发重命名
+     */
     private fun recomputeAndRename() {
-        val treeUri = currentTreeUri
+        // 立即重算 scoreValue，让 UI 能马上看到正确评分
+        val ordered = allVideos.sortedBy { it.manualOrder }
+        val bucketCounts = mutableMapOf<String, Int>()
+        for (video in ordered) {
+            val bucketKey = "%.1f".format(video.rating.coerceIn(0, 10).toDouble())
+            val used = bucketCounts.getOrDefault(bucketKey, 0)
+            video.scoreValue = VideoItem.composeDisplayScore(video.rating, 99 - used)
+            bucketCounts[bucketKey] = used + 1
+        }
+
         persistVideos()
         render()
-        if (treeUri == null) return
 
+        val treeUri = currentTreeUri ?: return
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 importer.recomputeScoresAndRename(treeUri, allVideos)
@@ -236,37 +260,30 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
     }
 
     private fun render() {
-        val query = currentQuery.trim().lowercase()
-        val visible = sortVideos(allVideos).filter { video ->
-            query.isBlank() ||
-                video.name.lowercase().contains(query) ||
-                video.relativePath.lowercase().contains(query)
-        }
-
-        adapter.submitList(visible)
+        adapter.submitList(sortVideos(allVideos))
         binding.emptyText.visibility =
-            if (visible.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
-        binding.countText.text = "${allVideos.size} 个视频"
-        val average = if (allVideos.isEmpty()) 0.0
-        else allVideos.sumOf { it.rating }.toDouble() / allVideos.size
-        binding.ratingText.text = "均分 %.1f".format(average)
+            if (allVideos.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+        // 更新工具栏上的状态文字
+        binding.countText.text = if (allVideos.isNotEmpty()) "${allVideos.size} 个视频" else ""
     }
 
     private fun sortVideos(input: List<VideoItem>): List<VideoItem> = when (sortMode) {
-        SortMode.MANUAL -> input.sortedBy { it.manualOrder }
-        SortMode.NAME_ASC -> input.sortedBy { it.name.lowercase() }
-        SortMode.NAME_DESC -> input.sortedByDescending { it.name.lowercase() }
-        SortMode.RATING_DESC -> input.sortedWith(compareByDescending<VideoItem> { it.rating }.thenBy { it.manualOrder })
-        SortMode.RATING_ASC -> input.sortedWith(compareBy<VideoItem> { it.rating }.thenBy { it.manualOrder })
+        SortMode.MANUAL       -> input.sortedBy { it.manualOrder }
+        SortMode.NAME_ASC     -> input.sortedBy { it.name.lowercase() }
+        SortMode.NAME_DESC    -> input.sortedByDescending { it.name.lowercase() }
+        SortMode.RATING_DESC  -> input.sortedWith(compareByDescending<VideoItem> { it.rating }.thenBy { it.manualOrder })
+        SortMode.RATING_ASC   -> input.sortedWith(compareBy<VideoItem> { it.rating }.thenBy { it.manualOrder })
         SortMode.DURATION_DESC -> input.sortedWith(compareByDescending<VideoItem> { it.durationMs }.thenBy { it.manualOrder })
-        SortMode.DURATION_ASC -> input.sortedWith(compareBy<VideoItem> { it.durationMs }.thenBy { it.manualOrder })
+        SortMode.DURATION_ASC  -> input.sortedWith(compareBy<VideoItem> { it.durationMs }.thenBy { it.manualOrder })
         SortMode.MODIFIED_DESC -> input.sortedWith(compareByDescending<VideoItem> { it.lastModified }.thenBy { it.manualOrder })
-        SortMode.MODIFIED_ASC -> input.sortedWith(compareBy<VideoItem> { it.lastModified }.thenBy { it.manualOrder })
+        SortMode.MODIFIED_ASC  -> input.sortedWith(compareBy<VideoItem> { it.lastModified }.thenBy { it.manualOrder })
     }
 
     private fun persistVideos() {
         storage.saveVideos(allVideos.sortedBy { it.manualOrder })
     }
+
+    // ── VideoAdapter.Callbacks ────────────────────────────────────────────────
 
     override fun onRate(videoId: String, rating: Int) {
         allVideos.find { it.id == videoId }?.rating = rating
@@ -279,6 +296,28 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
             allVideos.removeAt(index)
             persistVideos()
             render()
+        }
+    }
+
+    /**
+     * 点击视频 → 用系统播放器打开
+     * ACTION_VIEW + video/* MIME 会弹出"选择应用"对话框（仅本次 / 总是）
+     */
+    override fun onPlay(video: VideoItem) {
+        val uri = runCatching { Uri.parse(video.uri) }.getOrNull() ?: run {
+            Toast.makeText(this, "无法解析视频路径", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "video/*")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "未找到视频播放器", Toast.LENGTH_SHORT).show()
         }
     }
 

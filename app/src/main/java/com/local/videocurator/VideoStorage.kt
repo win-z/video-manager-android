@@ -69,6 +69,13 @@ class VideoStorage(context: Context) {
         return runCatching { VideoAdapter.ViewMode.valueOf(name) }.getOrDefault(VideoAdapter.ViewMode.GRID)
     }
 
+    fun saveGridSize(size: Int) {
+        prefs.edit().putInt(KEY_GRID_SIZE, size).apply()
+    }
+
+    /** spanCount: 2=中(默认), 3=小, 1=大 */
+    fun loadGridSize(): Int = prefs.getInt(KEY_GRID_SIZE, 2)
+
     fun saveTreeUri(uri: Uri) {
         prefs.edit().putString(KEY_TREE_URI, uri.toString()).apply()
     }
@@ -82,6 +89,7 @@ class VideoStorage(context: Context) {
         private const val KEY_VIDEOS = "videos"
         private const val KEY_SORT_MODE = "sort_mode"
         private const val KEY_VIEW_MODE = "view_mode"
+        private const val KEY_GRID_SIZE = "grid_size"
         private const val KEY_TREE_URI = "tree_uri"
     }
 }
