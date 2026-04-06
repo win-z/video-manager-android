@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.local.videocurator.databinding.ActivityMainBinding
+import android.view.View
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -120,7 +122,7 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         // ── 清空 ──
         binding.clearButton.setOnClickListener {
             if (allVideos.isEmpty()) return@setOnClickListener
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle("清空视频库")
                 .setMessage("确认移除当前列表中的视频和评分吗？")
                 .setPositiveButton("清空") { _, _ ->
@@ -262,7 +264,7 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
     private fun render() {
         adapter.submitList(sortVideos(allVideos))
         binding.emptyText.visibility =
-            if (allVideos.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+            if (allVideos.isEmpty()) View.VISIBLE else View.GONE
         // 更新工具栏上的状态文字
         binding.countText.text = if (allVideos.isNotEmpty()) "${allVideos.size} 个视频" else ""
     }

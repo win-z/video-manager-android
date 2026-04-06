@@ -12,6 +12,6 @@ enum class SortMode(val label: String) {
     MODIFIED_ASC("最早修改优先");
 
     companion object {
-        fun fromName(value: String?): SortMode = entries.firstOrNull { it.name == value } ?: MANUAL
+        fun fromName(value: String?): SortMode = values().firstOrNull { it.name == value } ?: MANUAL
     }
 }
