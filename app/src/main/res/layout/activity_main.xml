@@ -144,10 +144,39 @@
                     android:textColor="@color/deep_green"
                     android:textSize="15sp" />
 
+                <!-- 视图切换：网格 / 列表 -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_stat_pill"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/gridViewButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="网格视图"
+                        android:padding="8dp"
+                        android:src="@android:drawable/ic_menu_gallery"
+                        app:tint="@color/deep_green" />
+
+                    <ImageButton
+                        android:id="@+id/listViewButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="列表视图"
+                        android:padding="8dp"
+                        android:src="@android:drawable/ic_menu_sort_by_size"
+                        app:tint="@color/deep_green" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
                     android:orientation="horizontal">
 
                     <TextView

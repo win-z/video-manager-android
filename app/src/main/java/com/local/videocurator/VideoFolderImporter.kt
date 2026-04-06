@@ -1,9 +1,12 @@
 package com.local.videocurator
 
 import android.content.ContentResolver
+import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
-import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import androidx.documentfile.provider.DocumentFile
 import java.util.Locale
 
@@ -11,57 +14,161 @@ class VideoFolderImporter(private val context: Context) {
     private val resolver: ContentResolver = context.contentResolver
     private val videoExtensions = setOf("mp4", "mov", "m4v", "webm", "mkv", "avi", "wmv", "flv", "mpeg", "mpg")
 
-    fun importFromTree(treeUri: Uri, existing: List<VideoItem>): MutableList<VideoItem> {
+    /**
+     * 快速导入：优先使用 MediaStore 系统索引（毫秒级，包含时长），
+     * 失败时回退到 DocumentFile 遍历（慢但兼容所有路径）。
+     */
+    fun importFromTree(
+        treeUri: Uri,
+        existing: List<VideoItem>,
+        onProgress: ((scanned: Int) -> Unit)? = null
+    ): MutableList<VideoItem> {
+        val mediaStoreResult = tryMediaStoreImport(treeUri, existing, onProgress)
+        if (mediaStoreResult != null) return mediaStoreResult
+        return documentFileImport(treeUri, existing, onProgress)
+    }
+
+    // ── MediaStore 路径（快速）────────────────────────────────────────────────
+
+    private fun tryMediaStoreImport(
+        treeUri: Uri,
+        existing: List<VideoItem>,
+        onProgress: ((Int) -> Unit)?
+    ): MutableList<VideoItem>? = runCatching {
+        val docId = DocumentsContract.getTreeDocumentId(treeUri)
+        val folderPath = docId.substringAfter(':', "").trimEnd('/')
+        if (folderPath.isEmpty()) return null
+        queryMediaStore(folderPath, existing, onProgress)
+    }.getOrNull()
+
+    private fun queryMediaStore(
+        folderPrefix: String,
+        existing: List<VideoItem>,
+        onProgress: ((Int) -> Unit)?
+    ): MutableList<VideoItem> {
+        val existingByUri = existing.associateBy { it.uri }
+        val ordered = existing.toMutableList()
+        var nextOrder = (existing.maxOfOrNull { it.manualOrder } ?: 0) + 1
+
+        val projection = arrayOf(
+            MediaStore.Video.Media._ID,
+            MediaStore.Video.Media.DISPLAY_NAME,
+            MediaStore.Video.Media.SIZE,
+            MediaStore.Video.Media.DURATION,
+            MediaStore.Video.Media.DATE_MODIFIED,
+            MediaStore.Video.Media.RELATIVE_PATH,
+        )
+
+        // 匹配该文件夹及所有子文件夹
+        val selection = "${MediaStore.Video.Media.RELATIVE_PATH} LIKE ?"
+        val selectionArgs = arrayOf("$folderPrefix/%")
+
+        val cursor = resolver.query(
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+            projection, selection, selectionArgs,
+            "${MediaStore.Video.Media.DATE_MODIFIED} DESC"
+        ) ?: return ordered
+
+        var count = 0
+        cursor.use { c ->
+            val idCol = c.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+            val nameCol = c.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
+            val sizeCol = c.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
+            val durCol = c.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
+            val modCol = c.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED)
+            val pathCol = c.getColumnIndexOrThrow(MediaStore.Video.Media.RELATIVE_PATH)
+
+            while (c.moveToNext()) {
+                val mediaId = c.getLong(idCol)
+                val contentUri = ContentUris.withAppendedId(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI, mediaId
+                )
+                val uriStr = contentUri.toString()
+                val name = c.getString(nameCol) ?: continue
+                val size = c.getLong(sizeCol)
+                val duration = c.getLong(durCol)
+                val modifiedMs = c.getLong(modCol) * 1000L
+                val relPath = c.getString(pathCol) ?: ""
+
+                val old = existingByUri[uriStr]
+                val id = "$uriStr-$size-$modifiedMs"
+
+                val item = VideoItem(
+                    id = id,
+                    uri = uriStr,
+                    name = name,
+                    baseName = VideoItem.extractBaseName(name),
+                    relativePath = relPath + name,
+                    sizeBytes = size,
+                    durationMs = duration,
+                    lastModified = modifiedMs,
+                    rating = VideoItem.parseLeadingRating(name) ?: old?.rating ?: 0,
+                    scoreValue = old?.scoreValue ?: 0.0,
+                    manualOrder = old?.manualOrder ?: nextOrder++
+                )
+
+                val idx = ordered.indexOfFirst { it.uri == uriStr }
+                if (idx >= 0) ordered[idx] = item else ordered.add(item)
+
+                count++
+                if (count % 50 == 0) onProgress?.invoke(count)
+            }
+        }
+
+        onProgress?.invoke(count)
+        return ordered
+    }
+
+    // ── DocumentFile 回退路径（兼容，无 MediaStore 权限时使用）──────────────
+
+    private fun documentFileImport(
+        treeUri: Uri,
+        existing: List<VideoItem>,
+        onProgress: ((Int) -> Unit)?
+    ): MutableList<VideoItem> {
         val root = DocumentFile.fromTreeUri(context, treeUri) ?: return existing.toMutableList()
         val existingMap = existing.associateBy { it.id }.toMutableMap()
         val ordered = existing.toMutableList()
         var nextOrder = (existing.maxOfOrNull { it.manualOrder } ?: 0) + 1
+        var count = 0
 
         walk(root, emptyList()).forEach { entry ->
             val id = buildId(entry.file)
             val old = existingMap[id]
             val fileName = entry.file.name ?: "未命名视频"
-            val parsedRating = VideoItem.parseLeadingRating(fileName)
-            val baseName = VideoItem.extractBaseName(fileName)
 
             val item = VideoItem(
                 id = id,
                 uri = entry.file.uri.toString(),
                 name = fileName,
-                baseName = baseName,
+                baseName = VideoItem.extractBaseName(fileName),
                 relativePath = (entry.pathParts + listOfNotNull(entry.file.name)).joinToString("/"),
                 sizeBytes = entry.file.length(),
-                durationMs = readDuration(entry.file.uri),
+                durationMs = 0L,  // 不在此阶段读取，避免卡顿
                 lastModified = entry.file.lastModified(),
-                rating = parsedRating ?: old?.rating ?: 0,
+                rating = VideoItem.parseLeadingRating(fileName) ?: old?.rating ?: 0,
                 scoreValue = old?.scoreValue ?: 0.0,
                 manualOrder = old?.manualOrder ?: nextOrder++
             )
 
-            if (old == null) {
-                ordered.add(item)
-            } else {
-                val index = ordered.indexOfFirst { it.id == id }
-                if (index >= 0) {
-                    ordered[index] = item
-                }
-            }
+            val idx = ordered.indexOfFirst { it.id == id }
+            if (idx >= 0) ordered[idx] = item else ordered.add(item)
+
+            count++
+            if (count % 50 == 0) onProgress?.invoke(count)
         }
 
+        onProgress?.invoke(count)
         return ordered
     }
 
-    /**
-     * Recompute scores for all videos and rename their files accordingly.
-     * Returns the updated list with new names, IDs, and URIs.
-     */
+    // ── 重算评分 & 重命名 ─────────────────────────────────────────────────────
+
     fun recomputeScoresAndRename(
         treeUri: Uri,
-        videos: MutableList<VideoItem>
+        videos: MutableList<VideoItem>,
+        onProgress: ((renamed: Int, total: Int) -> Unit)? = null
     ): MutableList<VideoItem> {
-        val root = DocumentFile.fromTreeUri(context, treeUri) ?: return videos
-
-        // Sort by manualOrder for suffix assignment
         val ordered = videos.sortedBy { it.manualOrder }
         val bucketCounts = mutableMapOf<String, Int>()
 
@@ -73,48 +180,57 @@ class VideoFolderImporter(private val context: Context) {
             video.scoreValue = VideoItem.composeDisplayScore(video.rating, suffix)
         }
 
-        // Sort by rating desc, then score desc for display order
         val displayOrdered = ordered.sortedWith(
-            compareByDescending<VideoItem> { it.rating }
-                .thenByDescending { it.scoreValue }
+            compareByDescending<VideoItem> { it.rating }.thenByDescending { it.scoreValue }
         )
-        displayOrdered.forEachIndexed { index, video ->
-            video.manualOrder = index + 1
-        }
+        displayOrdered.forEachIndexed { index, video -> video.manualOrder = index + 1 }
 
-        // Rename files
-        for (video in displayOrdered) {
+        val root = runCatching { DocumentFile.fromTreeUri(context, treeUri) }.getOrNull()
+        val total = displayOrdered.size
+        displayOrdered.forEachIndexed { index, video ->
             renameVideoFile(root, video)
+            if ((index + 1) % 20 == 0 || index + 1 == total) {
+                onProgress?.invoke(index + 1, total)
+            }
         }
 
         return videos
     }
 
-    /**
-     * Rename a single video file to 【score】baseName.ext format.
-     */
-    fun renameVideoFile(treeRoot: DocumentFile, video: VideoItem): Boolean {
+    fun renameVideoFile(treeRoot: DocumentFile?, video: VideoItem): Boolean {
         val ext = VideoItem.getExtension(video.name)
         val newName = "【${VideoItem.formatScore(video.scoreValue)}】${video.baseName}$ext"
-
         if (newName == video.name) return true
 
-        // Find the file in the tree
-        val docFile = findDocumentFile(treeRoot, video.relativePath) ?: return false
+        // 优先用 MediaStore 重命名（快）
+        val uri = runCatching { Uri.parse(video.uri) }.getOrNull() ?: return false
+        if (tryMediaStoreRename(uri, video, newName)) return true
 
-        return try {
+        // 回退到 SAF 重命名
+        if (treeRoot == null) return false
+        val docFile = findDocumentFile(treeRoot, video.relativePath) ?: return false
+        return runCatching {
             if (docFile.renameTo(newName)) {
                 video.name = newName
                 video.uri = docFile.uri.toString()
                 video.id = buildId(docFile)
                 true
-            } else {
-                false
+            } else false
+        }.getOrDefault(false)
+    }
+
+    private fun tryMediaStoreRename(uri: Uri, video: VideoItem, newName: String): Boolean {
+        if (uri.authority?.contains("media") != true) return false
+        return runCatching {
+            val values = ContentValues().apply {
+                put(MediaStore.Video.Media.DISPLAY_NAME, newName)
             }
-        } catch (e: Exception) {
-            android.util.Log.w("VideoImporter", "rename failed: ${video.name} -> $newName", e)
-            false
-        }
+            val rows = resolver.update(uri, values, null, null)
+            if (rows > 0) {
+                video.name = newName
+                true
+            } else false
+        }.getOrDefault(false)
     }
 
     private fun findDocumentFile(root: DocumentFile, relativePath: String): DocumentFile? {
@@ -130,12 +246,8 @@ class VideoFolderImporter(private val context: Context) {
         val results = mutableListOf<VideoEntry>()
         directory.listFiles().forEach { child ->
             when {
-                child.isDirectory -> {
-                    results += walk(child, parents + listOfNotNull(child.name))
-                }
-                child.isFile && isVideo(child.name) -> {
-                    results += VideoEntry(child, parents)
-                }
+                child.isDirectory -> results += walk(child, parents + listOfNotNull(child.name))
+                child.isFile && isVideo(child.name) -> results += VideoEntry(child, parents)
             }
         }
         return results
@@ -146,24 +258,8 @@ class VideoFolderImporter(private val context: Context) {
         return ext in videoExtensions
     }
 
-    private fun buildId(file: DocumentFile): String {
-        return "${file.uri}-${file.length()}-${file.lastModified()}"
-    }
+    private fun buildId(file: DocumentFile): String =
+        "${file.uri}-${file.length()}-${file.lastModified()}"
 
-    private fun readDuration(uri: Uri): Long {
-        val retriever = MediaMetadataRetriever()
-        return runCatching {
-            resolver.openFileDescriptor(uri, "r")?.use { pfd ->
-                retriever.setDataSource(pfd.fileDescriptor)
-                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
-            } ?: 0L
-        }.getOrDefault(0L).also {
-            runCatching { retriever.release() }
-        }
-    }
-
-    private data class VideoEntry(
-        val file: DocumentFile,
-        val pathParts: List<String>
-    )
+    private data class VideoEntry(val file: DocumentFile, val pathParts: List<String>)
 }

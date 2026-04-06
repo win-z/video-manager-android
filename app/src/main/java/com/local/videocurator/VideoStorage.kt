@@ -60,6 +60,15 @@ class VideoStorage(context: Context) {
 
     fun loadSortMode(): SortMode = SortMode.fromName(prefs.getString(KEY_SORT_MODE, null))
 
+    fun saveViewMode(viewMode: VideoAdapter.ViewMode) {
+        prefs.edit().putString(KEY_VIEW_MODE, viewMode.name).apply()
+    }
+
+    fun loadViewMode(): VideoAdapter.ViewMode {
+        val name = prefs.getString(KEY_VIEW_MODE, null) ?: return VideoAdapter.ViewMode.GRID
+        return runCatching { VideoAdapter.ViewMode.valueOf(name) }.getOrDefault(VideoAdapter.ViewMode.GRID)
+    }
+
     fun saveTreeUri(uri: Uri) {
         prefs.edit().putString(KEY_TREE_URI, uri.toString()).apply()
     }
@@ -72,6 +81,7 @@ class VideoStorage(context: Context) {
     companion object {
         private const val KEY_VIDEOS = "videos"
         private const val KEY_SORT_MODE = "sort_mode"
+        private const val KEY_VIEW_MODE = "view_mode"
         private const val KEY_TREE_URI = "tree_uri"
     }
 }
