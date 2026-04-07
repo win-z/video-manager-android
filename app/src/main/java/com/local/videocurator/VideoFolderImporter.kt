@@ -104,7 +104,7 @@ class VideoFolderImporter(private val context: Context) {
                     uri = uriStr,
                     name = name,
                     baseName = VideoItem.extractBaseName(name),
-                    relativePath = relPath + name,
+                    relativePath = buildRelativePath(folderPrefix, relPath, name),
                     sizeBytes = size,
                     durationMs = duration,
                     lastModified = modifiedMs,
@@ -249,8 +249,27 @@ class VideoFolderImporter(private val context: Context) {
         }.getOrDefault(false)
     }
 
+    private fun buildRelativePath(folderPrefix: String, mediaRelativePath: String, name: String): String {
+        val normalizedPrefix = folderPrefix.trim('/')
+        val normalizedMediaPath = mediaRelativePath.trim('/').removeSuffix("/")
+        val relativeDir = when {
+            normalizedMediaPath.isBlank() -> ""
+            normalizedMediaPath == normalizedPrefix -> ""
+            normalizedMediaPath.startsWith("$normalizedPrefix/") ->
+                normalizedMediaPath.removePrefix("$normalizedPrefix/").trim('/')
+            else -> normalizedMediaPath
+        }
+        return listOfNotNull(relativeDir.takeIf { it.isNotBlank() }, name).joinToString("/")
+    }
+
     private fun findDocumentFile(root: DocumentFile, relativePath: String): DocumentFile? {
-        val parts = relativePath.split("/")
+        val parts = relativePath
+            .split("/")
+            .filter { it.isNotBlank() }
+            .toMutableList()
+        if (parts.firstOrNull() == root.name) {
+            parts.removeAt(0)
+        }
         var current: DocumentFile? = root
         for (part in parts) {
             current = current?.findFile(part) ?: return null

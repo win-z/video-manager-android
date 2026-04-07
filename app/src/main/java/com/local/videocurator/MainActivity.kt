@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.local.videocurator.databinding.ActivityMainBinding
+import com.local.videocurator.databinding.DialogEditVideoBinding
 import android.view.View
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
@@ -91,7 +93,7 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT,
             0
         ) {
-            override fun isLongPressDragEnabled(): Boolean = viewMode == VideoAdapter.ViewMode.LIST
+            override fun isLongPressDragEnabled(): Boolean = false
 
             override fun onMove(
                 recyclerView: RecyclerView,
@@ -300,6 +302,34 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         recomputeAndRename()
     }
 
+    override fun onEdit(videoId: String) {
+        val video = allVideos.find { it.id == videoId } ?: return
+        val dialogBinding = DialogEditVideoBinding.inflate(LayoutInflater.from(this))
+        dialogBinding.nameInput.setText(video.baseName)
+        dialogBinding.ratingBar.rating = video.rating.toFloat()
+        dialogBinding.ratingLabel.text = "评分：${video.rating} / 10"
+        dialogBinding.ratingBar.setOnRatingBarChangeListener { _, value, _ ->
+            dialogBinding.ratingLabel.text = "评分：${value.toInt()} / 10"
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("编辑视频")
+            .setView(dialogBinding.root)
+            .setNegativeButton("取消", null)
+            .setPositiveButton("保存") { _, _ ->
+                val newBaseName = dialogBinding.nameInput.text?.toString()?.trim().orEmpty()
+                val newRating = dialogBinding.ratingBar.rating.toInt().coerceIn(0, 10)
+                if (newBaseName.isBlank()) {
+                    Toast.makeText(this, "标题不能为空", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                video.baseName = newBaseName
+                video.rating = newRating
+                recomputeAndRename()
+            }
+            .show()
+    }
+
     override fun onRemove(videoId: String) {
         val index = allVideos.indexOfFirst { it.id == videoId }
         if (index >= 0) {
@@ -332,5 +362,5 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         }
     }
 
-    override fun canDrag(): Boolean = viewMode == VideoAdapter.ViewMode.LIST
+    override fun canDrag(): Boolean = false
 }

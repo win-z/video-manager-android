@@ -25,6 +25,7 @@ class VideoAdapter(
         fun onRate(videoId: String, rating: Int)
         fun onRemove(videoId: String)
         fun onPlay(video: VideoItem)
+        fun onEdit(videoId: String)
         fun canDrag(): Boolean
     }
 
@@ -88,7 +89,11 @@ class VideoAdapter(
 
         fun bind(video: VideoItem) {
             binding.root.setOnClickListener { callbacks.onPlay(video) }
-            binding.titleText.text = video.name
+            binding.root.setOnLongClickListener {
+                callbacks.onEdit(video.id)
+                true
+            }
+            binding.titleText.text = video.baseName
             bindRating(binding.ratingContainer, video)
             binding.scoreText.text = VideoItem.formatScore(video.scoreValue)
             loadThumbnail(video.uri.toUri(), binding.thumbnailImage)
@@ -102,7 +107,11 @@ class VideoAdapter(
 
         fun bind(video: VideoItem) {
             binding.root.setOnClickListener { callbacks.onPlay(video) }
-            binding.titleText.text = video.name
+            binding.root.setOnLongClickListener {
+                callbacks.onEdit(video.id)
+                true
+            }
+            binding.titleText.text = video.baseName
             bindRating(binding.ratingContainer, video)
             binding.scoreText.text = VideoItem.formatScore(video.scoreValue)
             loadThumbnail(video.uri.toUri(), binding.thumbnailImage)
@@ -122,7 +131,8 @@ class VideoAdapter(
                 contentDescription = "${video.name} ${rating} 星"
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 adjustViewBounds = true
-                setOnClickListener { callbacks.onRate(video.id, rating) }
+                isClickable = false
+                isFocusable = false
             }
             container.addView(button)
         }
