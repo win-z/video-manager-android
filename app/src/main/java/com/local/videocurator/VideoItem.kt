@@ -1,5 +1,7 @@
 package com.local.videocurator
 
+import kotlin.math.roundToInt
+
 data class VideoItem(
     var id: String,
     var uri: String,
@@ -47,8 +49,9 @@ data class VideoItem(
         }
 
         fun ratingFromScore(score: Double): Int {
-            val base = (score * 10).toInt() / 10.0
-            return ((base - 3.0) * 5).toInt().coerceIn(0, 10)
+            val clamped = score.coerceIn(3.0, 5.0)
+            val normalized = (clamped * 10.0).roundToInt() / 10.0
+            return ((normalized - 3.0) * 5.0).roundToInt().coerceIn(0, 10)
         }
 
         fun composeDisplayScore(rating: Int, suffix: Int): Double {

@@ -31,10 +31,11 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
     private lateinit var adapter: VideoAdapter
 
     private val allVideos = mutableListOf<VideoItem>()
-    private var sortMode = SortMode.MANUAL
+    private var sortMode = SortMode.RATING_DESC
     private var viewMode = VideoAdapter.ViewMode.GRID
     private var gridSpanCount = 2   // 默认 M 档
     private var currentTreeUri: Uri? = null
+    private var didReorderInGesture = false
 
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) importFolder(uri)
@@ -51,7 +52,10 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
 
         storage = VideoStorage(this)
         importer = VideoFolderImporter(this)
-        sortMode = storage.loadSortMode()
+        sortMode = storage.loadSortMode().let {
+            if (it == SortMode.MANUAL) SortMode.RATING_DESC else it
+        }
+        storage.saveSortMode(sortMode)
         viewMode = storage.loadViewMode()
         gridSpanCount = storage.loadGridSize()
         currentTreeUri = storage.loadTreeUri()
@@ -87,15 +91,16 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT,
             0
         ) {
-            override fun isLongPressDragEnabled(): Boolean = sortMode == SortMode.MANUAL
+            override fun isLongPressDragEnabled(): Boolean = viewMode == VideoAdapter.ViewMode.LIST
 
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-                if (sortMode != SortMode.MANUAL) return false
+                if (viewMode != VideoAdapter.ViewMode.LIST) return false
                 adapter.swap(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
+                didReorderInGesture = true
                 return true
             }
 
@@ -103,13 +108,14 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
 
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                 super.clearView(recyclerView, viewHolder)
-                if (sortMode == SortMode.MANUAL) {
+                if (viewMode == VideoAdapter.ViewMode.LIST && didReorderInGesture) {
                     val reordered = adapter.currentItems()
                     reordered.forEachIndexed { index, video ->
                         allVideos.find { it.id == video.id }?.manualOrder = index + 1
                     }
                     recomputeAndRename()
                 }
+                didReorderInGesture = false
             }
         })
         touchHelper.attachToRecyclerView(binding.videoRecycler)
@@ -249,6 +255,8 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         }
 
         persistVideos()
+        sortMode = SortMode.RATING_DESC
+        storage.saveSortMode(sortMode)
         render()
 
         val treeUri = currentTreeUri ?: return
@@ -257,6 +265,8 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
                 importer.recomputeScoresAndRename(treeUri, allVideos)
             }
             persistVideos()
+            sortMode = SortMode.RATING_DESC
+            storage.saveSortMode(sortMode)
             render()
         }
     }
@@ -271,8 +281,8 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         SortMode.MANUAL       -> input.sortedBy { it.manualOrder }
         SortMode.NAME_ASC     -> input.sortedBy { it.name.lowercase() }
         SortMode.NAME_DESC    -> input.sortedByDescending { it.name.lowercase() }
-        SortMode.RATING_DESC  -> input.sortedWith(compareByDescending<VideoItem> { it.rating }.thenBy { it.manualOrder })
-        SortMode.RATING_ASC   -> input.sortedWith(compareBy<VideoItem> { it.rating }.thenBy { it.manualOrder })
+        SortMode.RATING_DESC  -> input.sortedWith(compareByDescending<VideoItem> { it.scoreValue }.thenByDescending { it.rating }.thenBy { it.name.lowercase() })
+        SortMode.RATING_ASC   -> input.sortedWith(compareBy<VideoItem> { it.scoreValue }.thenBy { it.rating }.thenBy { it.name.lowercase() })
         SortMode.DURATION_DESC -> input.sortedWith(compareByDescending<VideoItem> { it.durationMs }.thenBy { it.manualOrder })
         SortMode.DURATION_ASC  -> input.sortedWith(compareBy<VideoItem> { it.durationMs }.thenBy { it.manualOrder })
         SortMode.MODIFIED_DESC -> input.sortedWith(compareByDescending<VideoItem> { it.lastModified }.thenBy { it.manualOrder })
@@ -322,5 +332,5 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         }
     }
 
-    override fun canDrag(): Boolean = sortMode == SortMode.MANUAL
+    override fun canDrag(): Boolean = viewMode == VideoAdapter.ViewMode.LIST
 }

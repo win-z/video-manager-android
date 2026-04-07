@@ -90,6 +90,7 @@ class VideoAdapter(
             binding.root.setOnClickListener { callbacks.onPlay(video) }
             binding.titleText.text = video.name
             bindRating(binding.ratingContainer, video)
+            binding.scoreText.text = VideoItem.formatScore(video.scoreValue)
             loadThumbnail(video.uri.toUri(), binding.thumbnailImage)
         }
     }
@@ -103,6 +104,7 @@ class VideoAdapter(
             binding.root.setOnClickListener { callbacks.onPlay(video) }
             binding.titleText.text = video.name
             bindRating(binding.ratingContainer, video)
+            binding.scoreText.text = VideoItem.formatScore(video.scoreValue)
             loadThumbnail(video.uri.toUri(), binding.thumbnailImage)
         }
     }

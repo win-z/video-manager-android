@@ -16,12 +16,13 @@ class VideoStorage(context: Context) {
                 val item = array.getJSONObject(index)
                 val name = item.getString("name")
                 val parsedRating = VideoItem.parseLeadingRating(name)
-                val resolvedRating = item.optInt("rating", parsedRating ?: VideoItem.DEFAULT_RATING)
+                val storedRating = item.optInt("rating", VideoItem.DEFAULT_RATING)
+                val resolvedRating = parsedRating ?: storedRating.takeIf { it in 1..10 } ?: VideoItem.DEFAULT_RATING
                 val parsedScoreValue = VideoItem.parseLeadingScoreValue(name)
-                val resolvedScoreValue = item.optDouble(
-                    "scoreValue",
-                    parsedScoreValue ?: VideoItem.composeDisplayScore(resolvedRating, 99)
-                )
+                val storedScoreValue = item.optDouble("scoreValue", 0.0)
+                val resolvedScoreValue = parsedScoreValue
+                    ?: storedScoreValue.takeIf { it > 0.0 }
+                    ?: VideoItem.composeDisplayScore(resolvedRating, 99)
                 VideoItem(
                     id = item.getString("id"),
                     uri = item.getString("uri"),

@@ -95,7 +95,9 @@ class VideoFolderImporter(private val context: Context) {
                 val parsedRating = VideoItem.parseLeadingRating(name)
                 val parsedScoreValue = VideoItem.parseLeadingScoreValue(name)
                 val resolvedRating = parsedRating ?: old?.rating ?: VideoItem.DEFAULT_RATING
-                val resolvedScoreValue = parsedScoreValue ?: old?.scoreValue ?: VideoItem.composeDisplayScore(resolvedRating, 99)
+                val resolvedScoreValue = parsedScoreValue
+                    ?: old?.scoreValue?.takeIf { it > 0.0 }
+                    ?: VideoItem.composeDisplayScore(resolvedRating, 99)
 
                 val item = VideoItem(
                     id = id,
@@ -143,7 +145,9 @@ class VideoFolderImporter(private val context: Context) {
             val parsedRating = VideoItem.parseLeadingRating(fileName)
             val parsedScoreValue = VideoItem.parseLeadingScoreValue(fileName)
             val resolvedRating = parsedRating ?: old?.rating ?: VideoItem.DEFAULT_RATING
-            val resolvedScoreValue = parsedScoreValue ?: old?.scoreValue ?: VideoItem.composeDisplayScore(resolvedRating, 99)
+            val resolvedScoreValue = parsedScoreValue
+                ?: old?.scoreValue?.takeIf { it > 0.0 }
+                ?: VideoItem.composeDisplayScore(resolvedRating, 99)
 
             val item = VideoItem(
                 id = id,
