@@ -103,7 +103,7 @@ class VideoFolderImporter(private val context: Context) {
                     id = id,
                     uri = uriStr,
                     name = name,
-                    baseName = VideoItem.extractBaseName(name),
+                    baseName = VideoItem.resolveBaseName(name, old?.baseName),
                     relativePath = buildRelativePath(folderPrefix, relPath, name),
                     sizeBytes = size,
                     durationMs = duration,
@@ -153,7 +153,7 @@ class VideoFolderImporter(private val context: Context) {
                 id = id,
                 uri = entry.file.uri.toString(),
                 name = fileName,
-                baseName = VideoItem.extractBaseName(fileName),
+                baseName = VideoItem.resolveBaseName(fileName, old?.baseName),
                 relativePath = (entry.pathParts + listOfNotNull(entry.file.name)).joinToString("/"),
                 sizeBytes = entry.file.length(),
                 durationMs = 0L,  // 不在此阶段读取，避免卡顿
@@ -214,13 +214,22 @@ class VideoFolderImporter(private val context: Context) {
         val newName = "【${VideoItem.formatScore(video.scoreValue)}】${video.baseName}$ext"
         if (newName == video.name) return true
 
-        // 优先用 MediaStore 重命名（快）
         val uri = runCatching { Uri.parse(video.uri) }.getOrNull() ?: return false
-        if (tryMediaStoreRename(uri, video, newName)) return true
 
-        // 回退到 SAF 重命名
-        if (treeRoot == null) return false
-        val docFile = findDocumentFile(treeRoot, video.relativePath) ?: return false
+        // 优先走 SAF，目录权限通常比 MediaStore 单文件更新更稳
+        if (treeRoot != null) {
+            val docFile = findDocumentFile(treeRoot, video.relativePath)
+                ?: findDocumentFileByName(treeRoot, video.name)
+            if (docFile != null && renameDocumentFile(docFile, video, newName)) {
+                return true
+            }
+        }
+
+        // 再回退到 MediaStore 更新
+        return tryMediaStoreRename(uri, video, newName)
+    }
+
+    private fun renameDocumentFile(docFile: DocumentFile, video: VideoItem, newName: String): Boolean {
         return runCatching {
             if (docFile.renameTo(newName)) {
                 val parentPath = video.relativePath.substringBeforeLast('/', "")
@@ -275,6 +284,19 @@ class VideoFolderImporter(private val context: Context) {
             current = current?.findFile(part) ?: return null
         }
         return current
+    }
+
+    private fun findDocumentFileByName(directory: DocumentFile, targetName: String): DocumentFile? {
+        directory.listFiles().forEach { child ->
+            when {
+                child.isFile && child.name == targetName -> return child
+                child.isDirectory -> {
+                    val nested = findDocumentFileByName(child, targetName)
+                    if (nested != null) return nested
+                }
+            }
+        }
+        return null
     }
 
     private fun walk(directory: DocumentFile, parents: List<String>): List<VideoEntry> {

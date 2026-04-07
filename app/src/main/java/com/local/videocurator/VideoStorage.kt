@@ -27,7 +27,7 @@ class VideoStorage(context: Context) {
                     id = item.getString("id"),
                     uri = item.getString("uri"),
                     name = name,
-                    baseName = item.optString("baseName", VideoItem.extractBaseName(name)),
+                    baseName = VideoItem.resolveBaseName(name, item.optString("baseName")),
                     relativePath = item.getString("relativePath"),
                     sizeBytes = item.getLong("sizeBytes"),
                     durationMs = item.getLong("durationMs"),

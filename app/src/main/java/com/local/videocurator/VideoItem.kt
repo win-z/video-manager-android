@@ -29,6 +29,16 @@ data class VideoItem(
                 .ifBlank { "未命名视频" }
         }
 
+        fun resolveBaseName(fileName: String, storedBaseName: String?): String {
+            val extracted = extractBaseName(fileName)
+            val normalizedStored = storedBaseName?.trim().orEmpty()
+            return when {
+                extracted != "未命名视频" -> extracted
+                normalizedStored.isNotBlank() && normalizedStored != "未命名视频" -> normalizedStored
+                else -> extracted
+            }
+        }
+
         fun getExtension(fileName: String): String {
             val dot = fileName.lastIndexOf('.')
             return if (dot >= 0) fileName.substring(dot) else ""

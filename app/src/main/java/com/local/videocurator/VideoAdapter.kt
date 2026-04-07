@@ -90,8 +90,7 @@ class VideoAdapter(
         fun bind(video: VideoItem) {
             binding.root.setOnClickListener { callbacks.onPlay(video) }
             binding.titleText.text = video.baseName
-            bindRating(binding.ratingContainer, video)
-            binding.scoreText.text = VideoItem.formatScore(video.scoreValue)
+            binding.scoreBadgeText.text = VideoItem.formatScore(video.scoreValue)
             loadThumbnail(video.uri.toUri(), binding.thumbnailImage)
         }
     }
