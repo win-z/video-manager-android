@@ -12,11 +12,11 @@
         android:id="@+id/toolbarCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
         app:cardBackgroundColor="@color/card_surface"
-        app:cardCornerRadius="20dp"
+        app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
         app:strokeColor="@color/card_stroke"
         app:strokeWidth="1dp"
@@ -29,22 +29,22 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="6dp">
+            android:paddingStart="6dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="4dp">
 
             <!-- 导入按钮 -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/importButton"
                 style="@style/Widget.Material3.Button.Icon"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="36dp"
                 android:minWidth="0dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
                 android:text="导入"
-                app:cornerRadius="12dp"
+                app:cornerRadius="10dp"
                 app:icon="@android:drawable/ic_menu_upload" />
 
             <!-- 清空按钮 -->
@@ -52,26 +52,26 @@
                 android:id="@+id/clearButton"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginStart="6dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="4dp"
                 android:minWidth="0dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
                 android:text="清空"
-                app:cornerRadius="12dp" />
+                app:cornerRadius="10dp" />
 
             <View
                 android:layout_width="1dp"
-                android:layout_height="28dp"
-                android:layout_marginStart="8dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="6dp"
                 android:layout_marginEnd="4dp"
                 android:background="@color/card_stroke" />
 
             <!-- 视图切换：网格 / 列表 -->
             <ImageButton
                 android:id="@+id/gridViewButton"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="网格"
                 android:padding="6dp"
@@ -80,8 +80,8 @@
 
             <ImageButton
                 android:id="@+id/listViewButton"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="列表"
                 android:padding="6dp"
@@ -90,7 +90,7 @@
 
             <View
                 android:layout_width="1dp"
-                android:layout_height="28dp"
+                android:layout_height="24dp"
                 android:layout_marginStart="4dp"
                 android:layout_marginEnd="4dp"
                 android:background="@color/card_stroke" />
@@ -98,8 +98,8 @@
             <!-- 图标大小：S / M / L -->
             <TextView
                 android:id="@+id/sizeSmallButton"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:gravity="center"
                 android:text="S"
                 android:textColor="@color/deep_green"
@@ -109,8 +109,8 @@
 
             <TextView
                 android:id="@+id/sizeMediumButton"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:gravity="center"
                 android:text="M"
                 android:textColor="@color/deep_green"
@@ -120,8 +120,8 @@
 
             <TextView
                 android:id="@+id/sizeLargeButton"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:gravity="center"
                 android:text="L"
                 android:textColor="@color/deep_green"
@@ -129,20 +129,10 @@
                 android:textStyle="bold"
                 android:background="?attr/selectableItemBackgroundBorderless" />
 
-            <!-- 弹性空间 -->
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1" />
-
-            <!-- 状态文字（导入进度等） -->
-            <TextView
-                android:id="@+id/countText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

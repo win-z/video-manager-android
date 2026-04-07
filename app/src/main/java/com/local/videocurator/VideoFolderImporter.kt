@@ -92,6 +92,10 @@ class VideoFolderImporter(private val context: Context) {
 
                 val old = existingByUri[uriStr]
                 val id = "$uriStr-$size-$modifiedMs"
+                val parsedRating = VideoItem.parseLeadingRating(name)
+                val parsedScoreValue = VideoItem.parseLeadingScoreValue(name)
+                val resolvedRating = parsedRating ?: old?.rating ?: VideoItem.DEFAULT_RATING
+                val resolvedScoreValue = parsedScoreValue ?: old?.scoreValue ?: VideoItem.composeDisplayScore(resolvedRating, 99)
 
                 val item = VideoItem(
                     id = id,
@@ -102,8 +106,8 @@ class VideoFolderImporter(private val context: Context) {
                     sizeBytes = size,
                     durationMs = duration,
                     lastModified = modifiedMs,
-                    rating = VideoItem.parseLeadingRating(name) ?: old?.rating ?: 0,
-                    scoreValue = old?.scoreValue ?: 0.0,
+                    rating = resolvedRating,
+                    scoreValue = resolvedScoreValue,
                     manualOrder = old?.manualOrder ?: nextOrder++
                 )
 
@@ -136,6 +140,10 @@ class VideoFolderImporter(private val context: Context) {
             val id = buildId(entry.file)
             val old = existingMap[id]
             val fileName = entry.file.name ?: "未命名视频"
+            val parsedRating = VideoItem.parseLeadingRating(fileName)
+            val parsedScoreValue = VideoItem.parseLeadingScoreValue(fileName)
+            val resolvedRating = parsedRating ?: old?.rating ?: VideoItem.DEFAULT_RATING
+            val resolvedScoreValue = parsedScoreValue ?: old?.scoreValue ?: VideoItem.composeDisplayScore(resolvedRating, 99)
 
             val item = VideoItem(
                 id = id,
@@ -146,8 +154,8 @@ class VideoFolderImporter(private val context: Context) {
                 sizeBytes = entry.file.length(),
                 durationMs = 0L,  // 不在此阶段读取，避免卡顿
                 lastModified = entry.file.lastModified(),
-                rating = VideoItem.parseLeadingRating(fileName) ?: old?.rating ?: 0,
-                scoreValue = old?.scoreValue ?: 0.0,
+                rating = resolvedRating,
+                scoreValue = resolvedScoreValue,
                 manualOrder = old?.manualOrder ?: nextOrder++
             )
 
@@ -211,7 +219,9 @@ class VideoFolderImporter(private val context: Context) {
         val docFile = findDocumentFile(treeRoot, video.relativePath) ?: return false
         return runCatching {
             if (docFile.renameTo(newName)) {
+                val parentPath = video.relativePath.substringBeforeLast('/', "")
                 video.name = newName
+                video.relativePath = if (parentPath.isNotBlank()) "$parentPath/$newName" else newName
                 video.uri = docFile.uri.toString()
                 video.id = buildId(docFile)
                 true
@@ -227,7 +237,9 @@ class VideoFolderImporter(private val context: Context) {
             }
             val rows = resolver.update(uri, values, null, null)
             if (rows > 0) {
+                val parentPath = video.relativePath.substringBeforeLast('/', "")
                 video.name = newName
+                video.relativePath = if (parentPath.isNotBlank()) "$parentPath/$newName" else newName
                 true
             } else false
         }.getOrDefault(false)

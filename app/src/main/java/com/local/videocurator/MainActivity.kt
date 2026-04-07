@@ -1,6 +1,8 @@
 package com.local.videocurator
 
 import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -193,7 +195,7 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
             val scanned = withContext(Dispatchers.IO) {
                 importer.importFromTree(uri, allVideos) { count ->
                     runOnUiThread {
-                        binding.importButton.text = "已找到 $count 个…"
+                        binding.importButton.text = "扫描 $count"
                     }
                 }
             }
@@ -212,7 +214,7 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
             withContext(Dispatchers.IO) {
                 importer.recomputeScoresAndRename(uri, allVideos) { renamed, total ->
                     runOnUiThread {
-                        binding.importButton.text = "重命名 $renamed/$total"
+                        binding.importButton.text = "$renamed/$total"
                     }
                 }
             }
@@ -263,8 +265,6 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         adapter.submitList(sortVideos(allVideos))
         binding.emptyText.visibility =
             if (allVideos.isEmpty()) View.VISIBLE else View.GONE
-        // 更新工具栏上的状态文字
-        binding.countText.text = if (allVideos.isNotEmpty()) "${allVideos.size} 个视频" else ""
     }
 
     private fun sortVideos(input: List<VideoItem>): List<VideoItem> = when (sortMode) {
@@ -311,12 +311,13 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
 
         val intent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "video/*")
+            clipData = ClipData.newRawUri(video.name, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        if (intent.resolveActivity(packageManager) != null) {
+        try {
             startActivity(intent)
-        } else {
+        } catch (_: ActivityNotFoundException) {
             Toast.makeText(this, "未找到视频播放器", Toast.LENGTH_SHORT).show()
         }
     }

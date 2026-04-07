@@ -5,7 +5,7 @@ data class VideoItem(
     var uri: String,
     var name: String,
     var baseName: String,
-    val relativePath: String,
+    var relativePath: String,
     val sizeBytes: Long,
     val durationMs: Long,
     val lastModified: Long,
@@ -14,11 +14,17 @@ data class VideoItem(
     var manualOrder: Int
 ) {
     companion object {
+        const val DEFAULT_RATING = 5
         private val BRACKET_SCORE = Regex("""^【(\d+(?:\.\d+)?)】\s*""")
+        private val PLUS_SCORE = Regex("""^\+(\d+(?:\.\d+)?)\s*""")
 
         fun extractBaseName(fileName: String): String {
             val withoutExt = fileName.substringBeforeLast('.', fileName)
-            return withoutExt.replace(BRACKET_SCORE, "").trim().ifBlank { "未命名视频" }
+            return withoutExt
+                .replace(BRACKET_SCORE, "")
+                .replace(PLUS_SCORE, "")
+                .trim()
+                .ifBlank { "未命名视频" }
         }
 
         fun getExtension(fileName: String): String {
@@ -26,9 +32,17 @@ data class VideoItem(
             return if (dot >= 0) fileName.substring(dot) else ""
         }
 
+        fun parseLeadingScoreValue(fileName: String): Double? {
+            val bracket = BRACKET_SCORE.find(fileName)
+            if (bracket != null) {
+                return bracket.groupValues[1].toDoubleOrNull()
+            }
+            val plus = PLUS_SCORE.find(fileName)
+            return plus?.groupValues?.get(1)?.toDoubleOrNull()
+        }
+
         fun parseLeadingRating(fileName: String): Int? {
-            val match = BRACKET_SCORE.find(fileName) ?: return null
-            val score = match.groupValues[1].toDoubleOrNull() ?: return null
+            val score = parseLeadingScoreValue(fileName) ?: return null
             return ratingFromScore(score)
         }
 

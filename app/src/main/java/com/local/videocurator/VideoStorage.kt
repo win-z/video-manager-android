@@ -15,6 +15,13 @@ class VideoStorage(context: Context) {
             MutableList(array.length()) { index ->
                 val item = array.getJSONObject(index)
                 val name = item.getString("name")
+                val parsedRating = VideoItem.parseLeadingRating(name)
+                val resolvedRating = item.optInt("rating", parsedRating ?: VideoItem.DEFAULT_RATING)
+                val parsedScoreValue = VideoItem.parseLeadingScoreValue(name)
+                val resolvedScoreValue = item.optDouble(
+                    "scoreValue",
+                    parsedScoreValue ?: VideoItem.composeDisplayScore(resolvedRating, 99)
+                )
                 VideoItem(
                     id = item.getString("id"),
                     uri = item.getString("uri"),
@@ -24,8 +31,8 @@ class VideoStorage(context: Context) {
                     sizeBytes = item.getLong("sizeBytes"),
                     durationMs = item.getLong("durationMs"),
                     lastModified = item.getLong("lastModified"),
-                    rating = item.optInt("rating", 0),
-                    scoreValue = item.optDouble("scoreValue", 0.0),
+                    rating = resolvedRating,
+                    scoreValue = resolvedScoreValue,
                     manualOrder = item.optInt("manualOrder", index + 1)
                 )
             }
