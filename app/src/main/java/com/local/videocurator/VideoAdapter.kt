@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.util.Size
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -15,7 +14,6 @@ import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import com.local.videocurator.databinding.ItemVideoCardBinding
 import com.local.videocurator.databinding.ItemVideoListBinding
-import java.text.DateFormat
 import java.util.concurrent.Executors
 
 class VideoAdapter(
@@ -34,7 +32,6 @@ class VideoAdapter(
 
     private val executor = Executors.newFixedThreadPool(2)
     private val items = mutableListOf<VideoItem>()
-    private val dateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM)
     var viewMode: ViewMode = ViewMode.GRID
         set(value) {
             field = value
@@ -92,11 +89,6 @@ class VideoAdapter(
         fun bind(video: VideoItem) {
             binding.root.setOnClickListener { callbacks.onPlay(video) }
             binding.titleText.text = video.name
-            val scoreLine = if (video.scoreValue > 0) " · 评分 ${VideoItem.formatScore(video.scoreValue)}" else ""
-            binding.metaText.text = "${video.relativePath}\n${Formatter.formatFileSize(video.sizeBytes)}$scoreLine · 修改于 ${dateFormat.format(video.lastModified)}"
-            binding.durationText.text = Formatter.formatDuration(video.durationMs)
-            binding.dragTipText.visibility = if (callbacks.canDrag()) View.VISIBLE else View.GONE
-            binding.removeButton.setOnClickListener { callbacks.onRemove(video.id) }
             bindRating(binding.ratingContainer, video)
             loadThumbnail(video.uri.toUri(), binding.thumbnailImage)
         }
@@ -110,11 +102,6 @@ class VideoAdapter(
         fun bind(video: VideoItem) {
             binding.root.setOnClickListener { callbacks.onPlay(video) }
             binding.titleText.text = video.name
-            val scoreLine = if (video.scoreValue > 0) " · ${VideoItem.formatScore(video.scoreValue)}分" else ""
-            binding.metaText.text = "${Formatter.formatFileSize(video.sizeBytes)}$scoreLine · ${dateFormat.format(video.lastModified)}"
-            binding.durationText.text = Formatter.formatDuration(video.durationMs)
-            binding.dragTipText.visibility = if (callbacks.canDrag()) View.VISIBLE else View.GONE
-            binding.removeButton.setOnClickListener { callbacks.onRemove(video.id) }
             bindRating(binding.ratingContainer, video)
             loadThumbnail(video.uri.toUri(), binding.thumbnailImage)
         }
@@ -127,10 +114,12 @@ class VideoAdapter(
         repeat(10) { index ->
             val rating = index + 1
             val button = ImageButton(container.context).apply {
-                layoutParams = ViewGroup.LayoutParams(56, 56)
+                layoutParams = ViewGroup.LayoutParams(28, 28)
                 background = null
                 setImageResource(if (rating <= video.rating) R.drawable.ic_star_filled else R.drawable.ic_star_outline)
                 contentDescription = "${video.name} ${rating} 星"
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
                 setOnClickListener { callbacks.onRate(video.id, rating) }
             }
             container.addView(button)

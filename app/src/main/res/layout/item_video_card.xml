@@ -3,9 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
+    android:layout_marginBottom="12dp"
     app:cardBackgroundColor="@color/card_surface"
-    app:cardCornerRadius="24dp"
+    app:cardCornerRadius="20dp"
     app:cardElevation="0dp"
     app:strokeColor="@color/card_stroke"
     app:strokeWidth="1dp">
@@ -17,92 +17,54 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="184dp"
+            android:layout_height="0dp"
+            android:layout_margin="10dp"
             android:background="@drawable/bg_thumbnail">
 
-            <ImageView
-                android:id="@+id/thumbnailImage"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/preview_image"
-                android:scaleType="centerCrop" />
+                android:layout_height="match_parent">
 
-            <TextView
-                android:id="@+id/durationText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end|bottom"
-                android:layout_margin="12dp"
-                android:background="@drawable/bg_duration"
-                android:paddingStart="10dp"
-                android:paddingTop="6dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="6dp"
-                android:text="00:00"
-                android:textColor="@android:color/white"
-                android:textSize="12sp" />
+                <ImageView
+                    android:id="@+id/thumbnailImage"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:contentDescription="@string/preview_image"
+                    android:scaleType="centerCrop"
+                    app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/titleText"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:maxLines="2"
-                    android:textColor="@color/deep_green"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <ImageButton
-                    android:id="@+id/removeButton"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_remove_button"
-                    android:contentDescription="@string/remove_video"
-                    android:padding="8dp"
-                    android:src="@android:drawable/ic_menu_close_clear_cancel"
-                    app:tint="@color/accent_dark" />
-            </LinearLayout>
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="12dp">
 
             <TextView
-                android:id="@+id/metaText"
+                android:id="@+id/titleText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:maxLines="3"
-                android:textColor="@color/text_muted"
-                android:textSize="13sp" />
+                android:maxLines="2"
+                android:textColor="@color/deep_green"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:id="@+id/ratingContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:gravity="center"
+                android:layout_marginTop="8dp"
+                android:gravity="start|center_vertical"
                 android:orientation="horizontal"
                 android:showDividers="middle"
                 android:divider="@drawable/divider_rating_gap" />
-
-            <TextView
-                android:id="@+id/dragTipText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/drag_tip"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
 
