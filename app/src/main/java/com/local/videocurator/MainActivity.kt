@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT,
             0
         ) {
-            override fun isLongPressDragEnabled(): Boolean = false
+            override fun isLongPressDragEnabled(): Boolean = viewMode == VideoAdapter.ViewMode.LIST
 
             override fun onMove(
                 recyclerView: RecyclerView,
@@ -362,5 +362,5 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
         }
     }
 
-    override fun canDrag(): Boolean = false
+    override fun canDrag(): Boolean = viewMode == VideoAdapter.ViewMode.LIST
 }

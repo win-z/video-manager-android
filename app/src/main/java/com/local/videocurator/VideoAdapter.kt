@@ -89,10 +89,6 @@ class VideoAdapter(
 
         fun bind(video: VideoItem) {
             binding.root.setOnClickListener { callbacks.onPlay(video) }
-            binding.root.setOnLongClickListener {
-                callbacks.onEdit(video.id)
-                true
-            }
             binding.titleText.text = video.baseName
             bindRating(binding.ratingContainer, video)
             binding.scoreText.text = VideoItem.formatScore(video.scoreValue)
@@ -107,13 +103,10 @@ class VideoAdapter(
 
         fun bind(video: VideoItem) {
             binding.root.setOnClickListener { callbacks.onPlay(video) }
-            binding.root.setOnLongClickListener {
-                callbacks.onEdit(video.id)
-                true
-            }
             binding.titleText.text = video.baseName
             bindRating(binding.ratingContainer, video)
             binding.scoreText.text = VideoItem.formatScore(video.scoreValue)
+            binding.editButton.setOnClickListener { callbacks.onEdit(video.id) }
             loadThumbnail(video.uri.toUri(), binding.thumbnailImage)
         }
     }

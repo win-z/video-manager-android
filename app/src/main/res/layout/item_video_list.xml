@@ -72,6 +72,17 @@
                     android:textColor="@color/text_muted"
                     android:textSize="10sp" />
             </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/editButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center_vertical"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="编辑视频"
+                android:padding="8dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:tint="@color/deep_green" />
         </LinearLayout>
 
     </LinearLayout>
