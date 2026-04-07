@@ -1,13 +1,11 @@
 package com.local.videocurator
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -302,8 +300,8 @@ class MainActivity : AppCompatActivity(), VideoAdapter.Callbacks {
     }
 
     /**
-     * 点击视频 → 用系统播放器打开
-     * ACTION_VIEW + video/* MIME 会弹出"选择应用"对话框（仅本次 / 总是）
+     * 点击视频 -> 用系统播放器打开
+     * ACTION_VIEW + video MIME 类型会弹出"选择应用"对话框（仅本次 / 总是）
      */
     override fun onPlay(video: VideoItem) {
         val uri = runCatching { Uri.parse(video.uri) }.getOrNull() ?: run {

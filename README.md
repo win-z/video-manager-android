@@ -18,3 +18,8 @@
 
 - 工程代码已搭好
 - 由于当前终端环境缺少 Java / Android SDK / Gradle，暂时还不能在这里直接产出 APK
+
+## 最近修复
+
+- 修复 `MainActivity.kt` 中注释包含 `video/*` 导致 Kotlin 误判为未闭合块注释、进而让 GitHub Actions 构建失败的问题
+- 清理 `MainActivity.kt` 中未使用的 import，减少编译干扰
